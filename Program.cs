@@ -1,4 +1,8 @@
-﻿namespace ConnectFourProject
+﻿using System;
+
+namespace ConnectFourProject
+
+// adding an abstract class for the players
 {
     public abstract class Player
     {
@@ -16,6 +20,8 @@
         public abstract int GetMove(Board board, ConsoleView view);
     }
 
+
+    // adds human players
     public class HumanPlayer : Player
     {
         public HumanPlayer(string name, char symbol, int wins) : base(name, symbol, wins)
@@ -55,6 +61,8 @@
             }
         }
     }
+
+    //adding board class
 
     public class Board
     {
@@ -202,6 +210,8 @@
         }
     }
 
+
+    // adding a console view class
     public class ConsoleView
     {
         public void DisplayWelcome()
@@ -236,7 +246,7 @@
         public void DisplayWinner(Player player)
         {
             Console.WriteLine($"Congratulations! {player.Name} ({player.Symbol}) wins!");
-            player.Wins += 1;
+            player.Wins += 1; // increment win counter for the winning player (which should be the current player) by 1.
         }
 
         public void DisplayDraw()
@@ -244,11 +254,18 @@
             Console.WriteLine("It's a draw!");
         }
 
+        public void DisplayScore(Player player1, Player player2)
+        {
+            Console.WriteLine("Current score:"); // score tracking for the current session
+            Console.WriteLine($"{player1.Name}: {player1.Wins}, {player2.Name}: {player2.Wins}");
+
+        }
+
         public bool AskPlayAgain()
         {
             Console.Write("Play again? (y/n): ");
             string input = Console.ReadLine()?.Trim().ToLower();
-            Console.Clear();
+            Console.Clear(); // clear console when restarting game
             return input == "y";
         }
     }
@@ -311,8 +328,7 @@
                     Console.Clear();
                     view.DisplayBoard(board);
                     view.DisplayWinner(currentPlayer);
-                    Console.WriteLine("Current score:");
-                    Console.WriteLine($"{player1.Name}: {player1.Wins}, {player2.Name}: {player2.Wins}");
+                    view.DisplayScore(player1, player2);
                     break;
                 }
 
@@ -321,13 +337,12 @@
                     Console.Clear();
                     view.DisplayBoard(board);
                     view.DisplayDraw();
-                    Console.WriteLine("Current score:");
-                    Console.WriteLine($"{player1.Name}: {player1.Wins}, {player2.Name}: {player2.Wins}");
+                    view.DisplayScore(player1, player2);
                     break;
                 }
 
                 SwitchPlayer();
-                Console.Clear();
+                Console.Clear(); // clears console when switching players to avoid clutter.
             }
         }
 
