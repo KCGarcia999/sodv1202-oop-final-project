@@ -1,30 +1,28 @@
 ﻿using System;
 
 namespace ConnectFourProject
-
-// adding an abstract class for the players
 {
+    // Abstract base class for players
     public abstract class Player
     {
         public string Name { get; }
         public char Symbol { get; }
         public int Wins { get; set; }
 
-        protected Player(string name, char symbol, int wins)
+        protected Player(string name, char symbol)
         {
             Name = name;
             Symbol = symbol;
-            Wins = wins;
+            Wins = 0;
         }
 
         public abstract int GetMove(Board board, ConsoleView view);
     }
 
-
-    // adds human players
+    // Human player class
     public class HumanPlayer : Player
     {
-        public HumanPlayer(string name, char symbol, int wins) : base(name, symbol, wins)
+        public HumanPlayer(string name, char symbol) : base(name, symbol)
         {
         }
 
@@ -33,7 +31,8 @@ namespace ConnectFourProject
             while (true)
             {
                 view.ShowMessage($"{Name} ({Symbol}), choose a column (1-7): ");
-                string input = Console.ReadLine();
+                string input = Console.ReadLine() ?? "";
+
                 if (int.TryParse(input, out int column))
                 {
                     column--; // convert 1-7 to 0-6
@@ -44,10 +43,8 @@ namespace ConnectFourProject
                         {
                             return column;
                         }
-                        else
-                        {
-                            view.ShowMessage("That column is full. Try again.");
-                        }
+
+                        view.ShowMessage("That column is full. Try again.");
                     }
                     else
                     {
@@ -62,14 +59,13 @@ namespace ConnectFourProject
         }
     }
 
-    //adding board class
-
+    // Board class
     public class Board
     {
         public const int Rows = 6;
         public const int Columns = 7;
 
-        private char[,] grid;
+        private readonly char[,] grid;
 
         public Board()
         {
@@ -125,12 +121,13 @@ namespace ConnectFourProject
             return true;
         }
 
+        // check if any 4 symbols in the array are the same in all directions
         public bool CheckWin(char symbol)
         {
-            return CheckHorizontal(symbol) ||
-                   CheckVertical(symbol) ||
-                   CheckDiagonalDownRight(symbol) ||
-                   CheckDiagonalUpRight(symbol);
+            return CheckHorizontal(symbol)
+                || CheckVertical(symbol)
+                || CheckDiagonalDownRight(symbol)
+                || CheckDiagonalUpRight(symbol);
         }
 
         private bool CheckHorizontal(char symbol)
@@ -210,8 +207,7 @@ namespace ConnectFourProject
         }
     }
 
-
-    // adding a console view class
+    // Console view class
     public class ConsoleView
     {
         public void DisplayWelcome()
@@ -246,7 +242,6 @@ namespace ConnectFourProject
         public void DisplayWinner(Player player)
         {
             Console.WriteLine($"Congratulations! {player.Name} ({player.Symbol}) wins!");
-            player.Wins += 1; // increment win counter for the winning player (which should be the current player) by 1.
         }
 
         public void DisplayDraw()
@@ -254,26 +249,26 @@ namespace ConnectFourProject
             Console.WriteLine("It's a draw!");
         }
 
+        // display current score over multiple rounds in the current session
         public void DisplayScore(Player player1, Player player2)
         {
-            Console.WriteLine("Current score:"); // score tracking for the current session
+            Console.WriteLine("Current score:");
             Console.WriteLine($"{player1.Name}: {player1.Wins}, {player2.Name}: {player2.Wins}");
-
         }
 
         public bool AskPlayAgain()
         {
             Console.Write("Play again? (y/n): ");
-            string input = Console.ReadLine()?.Trim().ToLower();
-            Console.Clear(); // clear console when restarting game
+            string input = (Console.ReadLine() ?? "").Trim().ToLower();
             return input == "y";
         }
     }
 
+    // Game controller class
     public class GameController
     {
-        private Board board;
-        private ConsoleView view;
+        private readonly Board board;
+        private readonly ConsoleView view;
         private Player player1;
         private Player player2;
         private Player currentPlayer;
@@ -282,6 +277,9 @@ namespace ConnectFourProject
         {
             board = new Board();
             view = new ConsoleView();
+            player1 = null!;
+            player2 = null!;
+            currentPlayer = null!;
         }
 
         public void Start()
@@ -294,7 +292,12 @@ namespace ConnectFourProject
             {
                 PlayGame();
                 playAgain = view.AskPlayAgain();
-                board.Initialize();
+
+                if (playAgain)
+                {
+                    Console.Clear();
+                    board.Initialize();
+                }
             }
             while (playAgain);
         }
@@ -302,13 +305,21 @@ namespace ConnectFourProject
         private void SetupPlayers()
         {
             Console.Write("Enter name for Player 1 (X): ");
-            string name1 = Console.ReadLine();
+            string name1 = (Console.ReadLine() ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(name1))
+            {
+                name1 = "Player 1";
+            }
 
             Console.Write("Enter name for Player 2 (O): ");
-            string name2 = Console.ReadLine();
+            string name2 = (Console.ReadLine() ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(name2))
+            {
+                name2 = "Player 2";
+            }
 
-            player1 = new HumanPlayer(name1, 'X', 0);
-            player2 = new HumanPlayer(name2, 'O', 0);
+            player1 = new HumanPlayer(name1, 'X');
+            player2 = new HumanPlayer(name2, 'O');
             currentPlayer = player1;
         }
 
@@ -321,10 +332,17 @@ namespace ConnectFourProject
                 view.DisplayBoard(board);
 
                 int column = currentPlayer.GetMove(board, view);
-                board.DropDisc(column, currentPlayer.Symbol);
+                bool dropped = board.DropDisc(column, currentPlayer.Symbol);
+
+                if (!dropped)
+                {
+                    view.ShowMessage("Move could not be completed. Try again.");
+                    continue;
+                }
 
                 if (board.CheckWin(currentPlayer.Symbol))
                 {
+                    currentPlayer.Wins++;
                     Console.Clear();
                     view.DisplayBoard(board);
                     view.DisplayWinner(currentPlayer);
@@ -342,7 +360,7 @@ namespace ConnectFourProject
                 }
 
                 SwitchPlayer();
-                Console.Clear(); // clears console when switching players to avoid clutter.
+                Console.Clear();
             }
         }
 
