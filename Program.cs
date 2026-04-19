@@ -8,14 +8,12 @@ namespace ConnectFourProject
         public string Name { get; }
         public char Symbol { get; }
         public int Wins { get; set; }
-
         protected Player(string name, char symbol)
         {
             Name = name;
             Symbol = symbol;
             Wins = 0;
         }
-
         public abstract int GetMove(Board board, ConsoleView view);
     }
 
@@ -64,7 +62,6 @@ namespace ConnectFourProject
     {
         public const int Rows = 6;
         public const int Columns = 7;
-
         private readonly char[,] grid;
 
         public Board()
@@ -89,11 +86,13 @@ namespace ConnectFourProject
             return grid[row, col];
         }
 
+        // for checking if the column is full or not
         public bool IsColumnFull(int column)
         {
             return grid[0, column] != '.';
         }
 
+        // drop disc functionality
         public bool DropDisc(int column, char symbol)
         {
             for (int row = Rows - 1; row >= 0; row--)
@@ -108,6 +107,7 @@ namespace ConnectFourProject
             return false;
         }
 
+        //check if every column is full
         public bool IsFull()
         {
             for (int col = 0; col < Columns; col++)
@@ -164,10 +164,10 @@ namespace ConnectFourProject
                     }
                 }
             }
-
             return false;
         }
 
+        // this also accounts for up+left
         private bool CheckDiagonalDownRight(char symbol)
         {
             for (int row = 0; row <= Rows - 4; row++)
@@ -183,10 +183,10 @@ namespace ConnectFourProject
                     }
                 }
             }
-
             return false;
         }
 
+        // this also accounts for down+left
         private bool CheckDiagonalUpRight(char symbol)
         {
             for (int row = 3; row < Rows; row++)
@@ -202,7 +202,6 @@ namespace ConnectFourProject
                     }
                 }
             }
-
             return false;
         }
     }
@@ -220,7 +219,6 @@ namespace ConnectFourProject
         public void DisplayBoard(Board board)
         {
             Console.WriteLine();
-
             for (int row = 0; row < Board.Rows; row++)
             {
                 for (int col = 0; col < Board.Columns; col++)
@@ -286,8 +284,8 @@ namespace ConnectFourProject
         {
             view.DisplayWelcome();
             SetupPlayers();
-
             bool playAgain;
+
             do
             {
                 PlayGame();
@@ -302,11 +300,12 @@ namespace ConnectFourProject
             while (playAgain);
         }
 
+        // set up for player names and score
         private void SetupPlayers()
         {
             Console.Write("Enter name for Player 1 (X): ");
             string name1 = (Console.ReadLine() ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(name1))
+            if (string.IsNullOrWhiteSpace(name1)) // default name if no input
             {
                 name1 = "Player 1";
             }
@@ -320,6 +319,7 @@ namespace ConnectFourProject
 
             player1 = new HumanPlayer(name1, 'X');
             player2 = new HumanPlayer(name2, 'O');
+            
             currentPlayer = player1;
         }
 
@@ -340,6 +340,7 @@ namespace ConnectFourProject
                     continue;
                 }
 
+                // code for checking if a player wins
                 if (board.CheckWin(currentPlayer.Symbol))
                 {
                     currentPlayer.Wins++;
